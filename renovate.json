@@ -1,0 +1,14 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "dependencyDashboard": false,
+  "minimumReleaseAge": "14 days",
+  "enabledManagers": ["mise"],
+  "packageRules": [
+    {
+      "description": "Group all mise tool updates into a single PR",
+      "matchManagers": ["mise"],
+      "groupName": "mise tools"
+    }
+  ]
+}

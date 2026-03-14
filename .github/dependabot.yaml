@@ -1,0 +1,13 @@
+version: 2
+
+updates:
+  # GitHub Actions (jdx/mise-action in action.yml)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    cooldown:
+      default-days: 14
+    schedule:
+      interval: "weekly"
+      day: friday
+      time: "10:00"
+      timezone: "America/Los_Angeles"
