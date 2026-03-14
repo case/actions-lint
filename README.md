@@ -52,6 +52,8 @@ All tool versions are pinned in [`mise.toml`](mise.toml) and monitored by Renova
 | `pyright`       | Python (type checking)   | 1.1.408 |
 | `blinter`       | Windows batch files      | 1.0.112 |
 | `govulncheck`   | Go (vulnerability scan)  | 1.1.4   |
+| `terraform-fmt` | Terraform (formatting)   | 1.11.5  |
+| `tflint`        | Terraform (linting)      | 0.61.0  |
 
 ## Behavior
 

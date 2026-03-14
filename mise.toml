@@ -11,3 +11,5 @@ golangci-lint = "2.11.1"                               # Go
 "pipx:pyright" = "1.1.408"                             # Python type checking
 "pipx:blinter" = "1.0.112"                             # Windows batch files
 "go:golang.org/x/vuln/cmd/govulncheck" = "1.1.4"      # Go vulnerability scanning
+tflint = "0.61.0"                                      # Terraform/HCL linting
+opentofu = "1.11.5"                                    # Terraform formatting (tofu fmt)

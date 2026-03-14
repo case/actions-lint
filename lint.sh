@@ -79,6 +79,14 @@ run_linter() {
     govulncheck)
       govulncheck ./... || return_code=1
       ;;
+    terraform-fmt)
+      tofu fmt -check -recursive . || return_code=1
+      ;;
+    tflint)
+      for dir in "${files[@]}"; do
+        tflint --chdir "$dir" || return_code=1
+      done
+      ;;
   esac
 
   if [ $return_code -eq 0 ]; then
@@ -119,6 +127,16 @@ fi
 # Windows batch files
 mapfile -t batchfiles < <(eval "find . $PRUNE -prune -o \( -name '*.cmd' -o -name '*.bat' \) -type f -print" 2>/dev/null)
 
+# Terraform files (check for .tf presence; terraform-fmt runs recursively, tflint needs directories)
+mapfile -t tffiles < <(eval "find . $PRUNE -prune -o -name '*.tf' -type f -print" 2>/dev/null)
+tfdirs=()
+if [ ${#tffiles[@]} -gt 0 ]; then
+  # terraform-fmt uses a sentinel so it's not skipped (it runs recursively from .)
+  tfdirs=(.)
+  # For tflint, find unique directories containing .tf files
+  mapfile -t tflintdirs < <(printf '%s\n' "${tffiles[@]}" | xargs -I{} dirname {} | sort -u)
+fi
+
 # --- Run linters ---
 
 run_linter "hadolint" "${dockerfiles[@]}"
@@ -130,6 +148,8 @@ run_linter "golangci-lint" "${gofiles[@]}"
 run_linter "pyright" "${pythonfiles[@]}"
 run_linter "blinter" "${batchfiles[@]}"
 run_linter "govulncheck" "${gofiles[@]}"
+run_linter "terraform-fmt" "${tfdirs[@]}"
+run_linter "tflint" "${tflintdirs[@]}"
 
 # --- Summary ---
 
