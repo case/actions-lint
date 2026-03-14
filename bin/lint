@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Lint this repo using its own lint.sh.
+# Runs all linters defined in mise.toml against the action's own files.
+
+# Enable all linters that have matching files in this repo
+export LINT_LINTERS="shellcheck
+yamllint
+actionlint"
+
+exec ./lint.sh

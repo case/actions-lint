@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Run lints and verify the action works correctly.
+# Mirrors CI (tests.yaml) so failures are caught before push.
+
+echo "==> Running lints..."
+
+bin/lint
+
+echo "==> Verifying action structure..."
+
+# Check required files exist
+for f in action.yml lint.sh mise.toml; do
+  if [ ! -f "$f" ]; then
+    echo "✗ Missing required file: $f"
+    exit 1
+  fi
+done
+echo "✓ All required files present"
+
+# Verify mise.toml is valid TOML
+python3 -c "import tomllib; tomllib.load(open('mise.toml', 'rb'))" 2>/dev/null
+echo "✓ mise.toml is valid TOML"
+
+# Verify action.yml is valid YAML
+yamllint --strict action.yml
+echo "✓ action.yml is valid YAML"
+
+echo "==> All tests passed."
