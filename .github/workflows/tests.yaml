@@ -1,0 +1,23 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - LICENSE
+  workflow_dispatch:
+
+jobs:
+  self-test:
+    name: Self-test
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Run actions-lint against itself
+        uses: ./
