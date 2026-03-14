@@ -1,0 +1,32 @@
+name: "Lint"
+description: "Run standard linters against a repository. Tools are installed via mise and cached automatically."
+author: "github.com/case"
+
+branding:
+  icon: "check-circle"
+  color: "green"
+
+inputs:
+  linters:
+    description: "Multi-line list of linters to run (one per line). Inline comments (#) are supported."
+    required: false
+    default: |
+      hadolint
+      shellcheck
+      yamllint
+      actionlint
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install lint tools
+      uses: jdx/mise-action@v4
+      with:
+        working_directory: ${{ github.action_path }}
+
+    - name: Run linters
+      shell: bash
+      env:
+        LINT_LINTERS: ${{ inputs.linters }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: bash ${{ github.action_path }}/lint.sh
