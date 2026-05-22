@@ -7,7 +7,7 @@ actionlint = "1.7.12"        # GitHub Actions workflows
 
 # Language-specific linters (opt-in via linters input)
 ruff = "0.15.12"                                        # Python lint + format
-golangci-lint = "2.11.4"                               # Go
+golangci-lint = "2.12.2"                               # Go
 "pipx:pyright" = "1.1.409"                             # Python type checking
 "pipx:blinter" = "1.0.112"                             # Windows batch files
 "go:golang.org/x/vuln/cmd/govulncheck" = "1.1.4"      # Go vulnerability scanning
