@@ -20,7 +20,7 @@ runs:
   using: "composite"
   steps:
     - name: Install lint tools
-      uses: jdx/mise-action@v4
+      uses: jdx/mise-action@v4.0.1
       with:
         working_directory: ${{ github.action_path }}
 
