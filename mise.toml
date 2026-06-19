@@ -6,10 +6,10 @@ actionlint = "1.7.12"        # GitHub Actions workflows
 "pipx:yamllint" = "1.38.0"   # YAML files
 
 # Language-specific linters (opt-in via linters input)
-ruff = "0.15.15"                                        # Python lint + format
+ruff = "0.15.16"                                        # Python lint + format
 golangci-lint = "2.12.2"                               # Go
-"pipx:pyright" = "1.1.409"                             # Python type checking
+"pipx:pyright" = "1.1.410"                             # Python type checking
 "pipx:blinter" = "1.0.112"                             # Windows batch files
 "go:golang.org/x/vuln/cmd/govulncheck" = "1.1.4"      # Go vulnerability scanning
-tflint = "0.62.1"                                      # Terraform/HCL linting
+tflint = "0.63.1"                                      # Terraform/HCL linting
 opentofu = "1.12.1"                                    # Terraform formatting (tofu fmt)
