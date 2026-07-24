@@ -6,7 +6,7 @@ actionlint = "1.7.12"        # GitHub Actions workflows
 "pipx:yamllint" = "1.38.0"   # YAML files
 
 # Language-specific linters (opt-in via linters input)
-ruff = "0.15.20"                                        # Python lint + format
+ruff = "0.15.21"                                        # Python lint + format
 golangci-lint = "2.12.2"                               # Go
 "pipx:pyright" = "1.1.411"                             # Python type checking
 "pipx:blinter" = "1.0.157"                             # Windows batch files
