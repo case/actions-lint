@@ -7,10 +7,25 @@ set -euo pipefail
 #
 # Inputs (via environment):
 #   LINT_LINTERS  - newline-separated list of linters to run (inline # comments supported)
-#   ACTION_PATH   - path to the action directory (for default configs)
+#   ACTION_PATH   - path to the action directory (tool resolution and default configs)
 
 # Resolve action path (set by action.yml, fallback to script's directory for local use)
 ACTION_PATH="${ACTION_PATH:-$(cd "$(dirname "$0")" && pwd)}"
+
+# Resolve tool bin paths from the action's own mise config. Use -C, never cd: the
+# working directory must stay on the consumer repo for the find globs below.
+if command -v mise >/dev/null 2>&1; then
+  TOOL_BIN_PATHS="$(mise bin-paths -q -C "$ACTION_PATH" | awk 'NF' | paste -sd: -)"
+  # An empty result would make PATH begin with ":", which POSIX reads as the
+  # current directory, and in CI that is an untrusted PR checkout.
+  if [ -z "$TOOL_BIN_PATHS" ]; then
+    echo "❌ could not resolve lint tool paths from $ACTION_PATH" >&2
+    exit 1
+  fi
+  # Process-scoped deliberately: writing GITHUB_PATH would add every tool dir to
+  # PATH for the consumer's remaining job steps.
+  PATH="$TOOL_BIN_PATHS:$PATH"
+fi
 
 # Parse enabled linters into an associative array for O(1) lookup
 declare -A ENABLED
@@ -22,7 +37,23 @@ done <<< "${LINT_LINTERS:-}"
 PASS=0
 FAIL=0
 SKIPPED=0
+UNRUNNABLE=0
 FAILURES=()
+UNRUNNABLES=()
+
+# Join with ", " for the summary. Entries contain spaces, so a space-separated
+# list is ambiguous, and "$*" joins on IFS's first character only.
+join_list() {
+  if [ $# -eq 0 ]; then
+    return
+  fi
+  printf '%s' "$1"
+  shift
+  if [ $# -gt 0 ]; then
+    printf ', %s' "$@"
+  fi
+  printf '\n'
+}
 
 run_linter() {
   local name="$1"
@@ -38,6 +69,25 @@ run_linter() {
   if [ ${#files[@]} -eq 0 ]; then
     echo "⏭️  $name: skipped (no matching files)"
     SKIPPED=$((SKIPPED + 1))
+    return
+  fi
+
+  # A tool that cannot run means these files go unchecked, which is not a lint
+  # finding. A mise shim satisfies command -v but still fails at exec time.
+  local bin="$name"
+  if [ "$name" = "terraform-fmt" ]; then
+    bin="tofu"
+  fi
+  if ! command -v "$bin" >/dev/null 2>&1; then
+    echo "❌ $name: cannot run, $bin not found on PATH"
+    UNRUNNABLE=$((UNRUNNABLE + 1))
+    UNRUNNABLES+=("$name ($bin not found)")
+    return
+  fi
+  if ! "$bin" --version >/dev/null 2>&1; then
+    echo "❌ $name: cannot run, $bin at $(command -v "$bin") is not executable"
+    UNRUNNABLE=$((UNRUNNABLE + 1))
+    UNRUNNABLES+=("$name ($bin not executable)")
     return
   fi
 
@@ -80,7 +130,7 @@ run_linter() {
       govulncheck ./... || return_code=1
       ;;
     terraform-fmt)
-      tofu fmt -check -recursive . || return_code=1
+      "$bin" fmt -check -recursive . || return_code=1
       ;;
     tflint)
       for dir in "${files[@]}"; do
@@ -156,9 +206,18 @@ run_linter "tflint" "${tflintdirs[@]}"
 echo ""
 echo "─────────────────────────────────────"
 
-if [ $FAIL -eq 0 ]; then
+if [ $FAIL -gt 0 ]; then
+  echo "❌ $FAIL failed, $PASS passed, $SKIPPED skipped: $(join_list "${FAILURES[@]}")"
+fi
+
+# An unrunnable linter means those files were never checked, so the run cannot
+# report success. Reported apart from lint findings: different cause, different fix.
+if [ $UNRUNNABLE -gt 0 ]; then
+  echo "❌ $UNRUNNABLE could not run (not verified): $(join_list "${UNRUNNABLES[@]}")"
+fi
+
+if [ $FAIL -eq 0 ] && [ $UNRUNNABLE -eq 0 ]; then
   echo "✅ All checks passed. ($PASS passed, $SKIPPED skipped)"
 else
-  echo "❌ $FAIL failed, $PASS passed, $SKIPPED skipped: ${FAILURES[*]}"
   exit 1
 fi
